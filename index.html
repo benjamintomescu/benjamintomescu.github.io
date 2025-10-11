@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin Panel | Roblox</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root{
+    --bg:#0e0f14;
+    --panel: rgba(28,29,39,0.65); /* semi-transparent for frosted look */
+    --panel-2: rgba(24,24,30,0.6);
+    --muted:#bfc1c7;
+    --accent:#1c3a6b;
+    --accent-2:#2a5392;
+    --white:#ffffff;
+    --success:#00d26a;
+    --danger:#ff4c4c;
+    --glass-blur: 6px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:var(--bg);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  /* Top bar */
+  .top-bar{
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+    background:linear-gradient(90deg,var(--bg) 0%, #15161b 100%);
+    font-weight:600;
+    gap:20px;
+  }
+  .logo img {
+  height:205px;
+  width:auto;
+  display:block;
+  filter: none;
+  margin-top: 10px; /* adjust this value as needed */
+}
+
+  .info{color:var(--muted);font-weight:600;margin-top:8px}
+  .admin{display:flex;align-items:center;gap:14px}
+  .profile{width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
+  .settings{cursor:pointer;color:var(--muted)}
+
+  /* white bold separator */
+  .separator{height:3px;background:var(--white);margin:10px 0 20px 0;border-radius:3px;box-shadow:0 0 10px rgba(255,255,255,0.08)}
+
+  /* main layout */
+  .main{flex:1;display:flex;gap:18px;overflow:hidden;padding:0 12px 18px 12px}
+
+  /* left sidebar */
+  .sidebar{
+    width:250px;
+    background:linear-gradient(180deg, rgba(25,26,33,0.78), rgba(22,22,26,0.6));
+    padding:16px;border-radius:0 12px 12px 0;display:flex;flex-direction:column;gap:10px;overflow:auto;
+    backdrop-filter: blur(var(--glass-blur));
+    border-right: 1px solid rgba(255,255,255,0.02);
+  }
+  .section{
+    display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;font-weight:700;text-transform:uppercase;cursor:pointer;
+    background:rgba(255,255,255,0.02);transition:all .18s;
+  }
+  .section svg{width:22px;height:22px;stroke:var(--white);stroke-width:1.6}
+  .section span{flex:1}
+  .section:hover{
+    transform:translateX(6px);
+    box-shadow:0 8px 24px rgba(28,58,107,0.12);
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  }
+  /* soft blue outer glow for svg on hover */
+  .section:hover svg{filter: drop-shadow(0 6px 14px rgba(42,83,146,0.16));}
+
+  .section.active{
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    box-shadow: 0 10px 28px rgba(42,83,146,0.16);
+  }
+
+  /* center column */
+  .center{
+    flex:3;display:flex;flex-direction:column;gap:26px;overflow:auto;padding-right:6px;
+    padding-left:6px;
+  }
+
+  .account-boxes{display:flex;gap:16px}
+  .account-box{
+    flex:1;background:var(--panel);padding:20px;border-radius:12px;text-align:center;font-weight:700;position:relative;cursor:pointer;
+    transition:all .18s;backdrop-filter: blur(4px);
+  }
+  .account-box .dot{position:absolute;right:10px;top:8px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+
+  .card{
+    background: linear-gradient(180deg, rgba(28,29,39,0.7), rgba(20,21,28,0.55));
+    padding:22px;border-radius:12px;box-shadow:0 10px 40px rgba(28,58,107,0.08);
+    display:flex;flex-direction:column;gap:16px;backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.02);
+  }
+  .card h2{margin:0;font-size:1.6rem}
+  .card hr{border:2px solid var(--white);margin:6px 0}
+
+  .row{display:flex;align-items:center;gap:10px;font-weight:600;flex-wrap:wrap}
+  .row span:first-child{min-width:140px;color:var(--muted)}
+  input[type=text],select{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(10,10,12,0.5);color:var(--white);flex:1}
+  .btn{padding:8px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+  .btn:hover{background:var(--accent-2)}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--white)}
+
+  /* middle quick actions */
+  .middle{flex:1.4;background:linear-gradient(180deg, rgba(21,22,28,0.6), rgba(18,18,22,0.5));border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px;overflow:auto;box-shadow:0 10px 30px rgba(28,58,107,0.06);backdrop-filter: blur(4px)}
+  .middle h3{margin:0;font-size:1.2rem}
+  .actions{display:flex;flex-wrap:wrap;gap:8px}
+  .action-btn{padding:8px 12px;border-radius:8px;border:none;background:#232530;color:#fff;font-weight:700;cursor:pointer}
+  .action-btn:hover{background:#2e3139}
+
+  /* right logs */
+  .right{
+    flex:1.9;background:linear-gradient(180deg, rgba(26,27,34,0.66), rgba(18,18,22,0.5));border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto;box-shadow:0 10px 30px rgba(28,58,107,0.06);backdrop-filter: blur(4px)
+  }
+  .right h3{margin:0;font-size:1.2rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .right .log-controls{display:flex;gap:8px;align-items:center}
+  .log{background:rgba(24,25,30,0.7);padding:10px;border-radius:10px;box-shadow:0 4px 12px rgba(28,58,107,0.06);font-weight:600}
+  .log.success{border-left:4px solid var(--accent)}
+  .log.warning{border-left:4px solid var(--warning)}
+  .log.critical{border-left:4px solid var(--danger)}
+
+  /* experience cards */
+  .exp-list{display:flex;flex-direction:column;gap:12px}
+  .exp-card{background:rgba(16,16,18,0.45);padding:14px;border-radius:10px;display:flex;flex-direction:column;gap:10px;border:1px solid rgba(255,255,255,0.02)}
+  .exp-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .small{font-weight:600;color:var(--muted)}
+  .expand-btn{padding:6px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);cursor:pointer}
+  .chart{height:70px;background:linear-gradient(90deg,#0f1630,#081222);border-radius:8px;padding:10px;display:flex;align-items:flex-end;gap:8px}
+  .bar{height:30px;width:18px;background:var(--accent);border-radius:4px;align-self:flex-end;transition:all .35s}
+
+  /* Modal & loader & confirm */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:3000}
+  .modal-card{background:linear-gradient(180deg, rgba(14,15,20,0.95), rgba(14,15,20,0.85));padding:18px;border-radius:12px;min-width:360px;max-width:94%;box-shadow:0 16px 48px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
+  .modal-card h3{margin:0 0 8px 0}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+
+  .loader-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:3500;backdrop-filter: blur(6px)}
+  .spinner{width:84px;height:84px;border-radius:50%;border:8px solid rgba(255,255,255,0.05);border-top:8px solid var(--white);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .confirm-popup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#07110a,#07110a);border-left:6px solid var(--success);padding:18px 22px;border-radius:12px;display:none;align-items:center;gap:12px;z-index:4000;box-shadow:0 12px 40px rgba(0,255,128,0.06)}
+  .confirm-popup svg{width:36px;height:36px;stroke:var(--success)}
+  .confirm-text{font-weight:700;color:#cffff0}
+
+  /* small button styles */
+  .small-btn{padding:6px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  .small-btn.clear{background:#d1d1d1;color:#111}
+  .small-btn.backup{background:#ff4c4c;color:#fff}
+
+  @media (max-width:1200px){
+    .main{flex-direction:column;padding:8px}
+    .sidebar{width:100%;flex-direction:row;overflow:auto}
+    .center{order:2}
+    .middle{order:3}
+    .right{order:4}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:18px">
+      <div class="logo"><img src="image.png" alt="Logo"></div>
+      <div class="info">
+  IP: 192.168.1.45 | Last login: 10 Oct 2025 |  
+  Role: Administrator | Access Level: 5 | Session ID: 9f8b7a6c-1234 | 2FA: Enabled | Server: Roblox Main | Browser: Chrome 118.0 | Location: USA
+</div>
+
+    </div>
+    <div class="admin">
+      <div class="profile">A</div>
+      <div class="settings" title="Admin settings">⚙️</div>
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <!-- each section has a semantic inline SVG icon -->
+      <div class="section active" data-section="user">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c0-3.5 3.5-6 7-6s7 2.5 7 6"/></svg><span>User Management</span>
+      </div>
+
+      <div class="section" data-section="players">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M6 9a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 15h6"/></svg><span>Players</span>
+      </div>
+
+      <div class="section" data-section="reports">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 12.34a2 2 0 0 0 0 2.83l5.66 5.66a2 2 0 0 0 2.83 0L19 11.35"/><path d="M22 12h-7"/></svg><span>Reports</span>
+      </div>
+
+      <div class="section" data-section="settings">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33"/></svg><span>Settings</span>
+      </div>
+
+      <div class="section" data-section="analytics">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18"/><path d="M7 14v-4"/><path d="M12 18v-10"/><path d="M17 10V8"/></svg><span>Analytics</span>
+      </div>
+
+      <div class="section" data-section="roles">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Roles</span>
+      </div>
+
+      <div class="section" data-section="permissions">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="12" rx="2"/><path d="M3 15h18v6H3z"/></svg><span>Permissions</span>
+      </div>
+
+      <div class="section" data-section="security">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M7 7V5a5 5 0 0 1 10 0v2"/></svg><span>Security</span>
+      </div>
+
+      <div class="section" data-section="bans">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M14 3l7 7-7 7-7-7 7-7z"/><path d="M7 17v4"/></svg><span>Bans</span>
+      </div>
+
+      <div class="section" data-section="groups">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H11a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Groups</span>
+      </div>
+
+      <div class="section" data-section="device">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg><span>Device</span>
+      </div>
+
+      <div class="section" data-section="troubleshoot">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H9"/><path d="M3 3l18 18"/></svg><span>Troubleshooting</span>
+      </div>
+
+      <div class="section" data-section="transactions">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22"/><path d="M17 5H7"/></svg><span>Transactions</span>
+      </div>
+
+      <div class="section" data-section="experiences">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M12 12v8"/></svg><span>Experiences</span>
+      </div>
+
+      <div class="section" data-section="dev">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M7 7h10v10H7z"/><path d="M3 3l18 18"/></svg><span>Developer Options</span>
+      </div>
+
+      <div class="section" data-section="logs">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/></svg><span>Logs</span>
+      </div>
+
+      <div class="section" data-section="support">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 0 0-12 0"/><path d="M12 20v-8"/></svg><span>Support</span>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center" id="center">
+      <div class="account-boxes">
+        <div class="account-box"><div>Account</div><div class="dot"></div></div>
+        <div class="account-box">Billing</div>
+        <div class="account-box">Device</div>
+        <div class="account-box">Troubleshooting</div>
+      </div>
+
+      <!-- User Management Card -->
+      <div class="card" id="userCard">
+        <h2>User Management</h2>
+        <div class="row"><span>UserID:</span><span id="uid">12345678</span></div>
+        <div class="row"><span>Status:</span><span id="statusText">Active</span></div>
+        <div class="row"><span>Email:</span><span id="emailText">newmail@domain.com</span></div>
+        <div class="row"><span>Username:</span><span id="usernameText">AdminUser</span></div>
+        <div class="row"><span>Last Login:</span><span id="lastLogin">10 Oct 2025 14:32</span></div>
+        <div class="row"><span>IP:</span><span id="ipText">192.168.1.45</span><div class="spacer"></div><button class="btn" id="historyBtn">Show Full History</button></div>
+        <hr>
+
+        <h2>Account Controls</h2>
+        <div class="row">
+          <span class="small">Change Email:</span>
+          <button class="btn" id="openEmail">Change</button>
+          <button class="btn btn-ghost" id="sendReset">Send Reset Password</button>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <div class="card">
+        <h2>Transactions & Gamepasses</h2>
+        <div class="row"><span>Gamepasses:</span><span id="gpasses">VIP, Builder</span></div>
+        <div class="row"><span>Transactions:</span><span id="trans">3500 Robux</span></div>
+        <div class="row"><span>Shop Purchases:</span><span id="shop">1200 Robux</span></div>
+        <div class="row"><span>Membership:</span><span id="membership">Free</span></div>
+        <div class="row"><span>Revenue:</span><span id="revenue">15,000 Robux</span></div>
+      </div>
+
+      <!-- Experiences & Developer Options -->
+      <div class="card">
+        <h2>Experiences & Developer Options</h2>
+        <div class="row"><span>Experiences Created:</span><span id="expCount">3</span></div>
+        <div class="row"><span>Revenue Created:</span><span id="expRevenue">12,500 Robux</span></div>
+        <div class="row"><span>Feature Flags:</span><span id="flags">DevMode, BetaFeatures</span></div>
+
+        <div class="exp-list" id="expList"></div>
+      </div>
+    </div>
+
+    <!-- MIDDLE (Quick Actions) -->
+    <div class="middle">
+      <h3>Quick Actions</h3>
+      <div class="actions" id="quickActions">
+        <button class="action-btn" data-action="Send Message">Send Message</button>
+        <button class="action-btn" data-action="Reset Password">Reset Password</button>
+        <button class="action-btn" data-action="Ban User">Ban User</button>
+        <button class="action-btn" data-action="View Transactions">View Transactions</button>
+        <button class="action-btn" data-action="View Reports">View Reports</button>
+        <button class="action-btn" data-action="View Experiences">View Experiences</button>
+        <button class="action-btn" data-action="Edit User Info">Edit User Info</button>
+        <button class="action-btn" data-action="Add Note">Add Note</button>
+        <button class="action-btn" data-action="Export Data">Export Data</button>
+        <button class="action-btn" data-action="Enable Features">Enable Features</button>
+        <button class="action-btn" data-action="Disable Features">Disable Features</button>
+        <button class="action-btn" data-action="View Logs">View Logs</button>
+        <button class="action-btn" data-action="Grant VIP">Grant VIP</button>
+        <button class="action-btn" data-action="Revoke VIP">Revoke VIP</button>
+        <button class="action-btn" data-action="Reset Inventory">Reset Inventory</button>
+        <button class="action-btn" data-action="Force Logout">Force Logout</button>
+        <button class="action-btn" data-action="Send Alert">Send Alert</button>
+        <button class="action-btn" data-action="Refund Purchase">Refund Purchase</button>
+        <button class="action-btn" data-action="Update Permissions">Update Permissions</button>
+        <button class="action-btn" data-action="Adjust Membership">Adjust Membership</button>
+      </div>
+
+      <h3 style="margin-top:12px">Notifications</h3>
+      <div class="row muted">No new notifications</div>
+    </div>
+
+    <!-- RIGHT (System Logs) -->
+    <div class="right" id="logsPanel">
+      <h3>
+        <span>System Logs</span>
+        <span class="log-controls">
+          <button class="small-btn clear" id="clearLogs">Clear Logs</button>
+          <button class="small-btn backup" id="backupLogs">Backup Logs</button>
+        </span>
+      </h3>
+
+      <div class="log success">User 12345678 logged in at 10 Oct 2025 14:32</div>
+      <div class="log success">Admin panel opened by AdminUser</div>
+    </div>
+  </div>
+
+  <!-- EMAIL MODAL -->
+  <div class="modal-backdrop" id="emailModal">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <h3>Change Email</h3>
+      <div class="row"><span class="small">From:</span><span id="modalOldEmail">newmail@domain.com</span></div>
+      <div class="row"><span class="small">To:</span><input id="modalNewEmail" type="text" placeholder="new@example.com"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelEmail">Cancel</button>
+        <button class="btn" id="confirmEmail">Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warnings Modal (kept for controls) -->
+  <div class="modal-backdrop" id="warningsModal">
+    <div class="modal-card">
+      <h3>Manage Warnings</h3>
+      <div class="row"><span class="small">Current Warnings:</span><span id="curWarnings">1</span></div>
+      <div class="row"><span class="small">Add Reason:</span><input id="modalWarnReason" type="text" placeholder="Reason"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelWarn">Cancel</button>
+        <button class="btn" id="confirmWarn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ban Modal -->
+  <div class="modal-backdrop" id="banModal">
+    <div class="modal-card">
+      <h3>Ban / Status</h3>
+      <div class="row"><span class="small">Status:</span>
+        <select id="banStatus"><option>Active</option><option>Banned</option><option>Suspended</option></select>
+      </div>
+      <div class="row"><span class="small">Duration:</span><input id="banDuration" type="text" placeholder="24h / Permanent"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelBan">Cancel</button>
+        <button class="btn" id="confirmBan">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader-backdrop" id="loader">
+    <div class="spinner" role="progressbar"></div>
+  </div>
+
+  <!-- Confirmation pop-up -->
+  <div class="confirm-popup" id="confirmPopup" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
+    <div class="confirm-text" id="confirmText">Confirmed</div>
+  </div>
+
+<script>
+/* --- Utilities --- */
+let loaderTimeout = null;
+function showLoader(duration=5000, cb){
+  const loader = document.getElementById('loader');
+  // clear any existing timeout
+  if(loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; }
+  loader.style.display = 'flex';
+  loaderTimeout = setTimeout(()=> {
+    loader.style.display = 'none';
+    loaderTimeout = null;
+    if(typeof cb === 'function') cb();
+  }, duration);
+}
+function showConfirm(text){
+  const el = document.getElementById('confirmPopup');
+  el.querySelector('#confirmText').innerText = text;
+  el.style.display = 'flex';
+  setTimeout(()=> el.style.display = 'none', 3000);
+}
+function addLog(text, type='success'){
+  const panel = document.getElementById('logsPanel');
+  const div = document.createElement('div');
+  div.className = 'log ' + (type || 'success');
+  div.textContent = text;
+  panel.insertBefore(div, panel.children[1] || null); // after header
+}
+
+/* --- Experiences sample data & rendering --- */
+const experiences = [
+  { id:1, name:'Tycoon Deluxe', active:420, revenue:5200, reports:2, daily:[120,200,80,140,220,180,160] },
+  { id:2, name:'Adventure RP', active:250, revenue:3300, reports:5, daily:[80,120,100,90,200,180,120] },
+  { id:3, name:'Speed Run X', active:110, revenue:4000, reports:1, daily:[60,80,100,140,120,160,200] }
+];
+function renderExperiences(){
+  const list = document.getElementById('expList');
+  list.innerHTML = '';
+  experiences.forEach(exp=>{
+    const el = document.createElement('div'); el.className='exp-card';
+    el.innerHTML = `
+      <div class="exp-head">
+        <div>
+          <div style="font-weight:700">${exp.name}</div>
+          <div class="small">${exp.active} active • ${exp.reports} reports</div>
+        </div>
+        <div class="flex">
+          <div class="small">Revenue: ${exp.revenue} Robux</div>
+          <button class="expand-btn" data-id="${exp.id}">Expand</button>
+        </div>
+      </div>
+      <div class="chart" data-id="${exp.id}">
+        ${exp.daily.map(v=>`<div class="bar" style="height:${10 + (v/6)}px"></div>`).join('')}
+      </div>
+      <div class="small muted">Click "Expand" for more details</div>
+    `;
+    list.appendChild(el);
+  });
+  document.querySelectorAll('.expand-btn').forEach(b=>{
+    b.onclick = (e)=> openExperience(+e.currentTarget.dataset.id);
+  });
+}
+function openExperience(id){
+  const exp = experiences.find(x=>x.id===id);
+  if(!exp) return;
+  const mb = document.createElement('div');
+  mb.className='modal-backdrop'; mb.style.display='flex';
+  mb.innerHTML = `
+    <div class="modal-card">
+      <h3>${exp.name} — Details</h3>
+      <div class="row"><span class="small">Active Users:</span><span>${exp.active}</span></div>
+      <div class="row"><span class="small">Revenue:</span><span>${exp.revenue} Robux</span></div>
+      <div class="row"><span class="small">Reports:</span><span>${exp.reports}</span></div>
+      <div class="row"><span class="small">Daily (last 7):</span>
+        <div style="display:flex;gap:6px;align-items:flex-end">
+          ${exp.daily.map(d=>`<div style="width:18px;height:${10 + d/6}px;background:var(--accent);border-radius:4px"></div>`).join('')}
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost closeExp">Close</button>
+        <button class="btn exportExp">Export Report</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(mb);
+  mb.querySelector('.closeExp').onclick = ()=> mb.remove();
+  mb.querySelector('.exportExp').onclick = ()=>{
+    mb.remove();
+    addLog(`Exported report for "${exp.name}"`);
+    showConfirm(`Exported "${exp.name}"`);
+  };
+}
+
+/* --- Wire up interactions --- */
+document.addEventListener('DOMContentLoaded', ()=>{
+
+  renderExperiences();
+
+  // Prefill realistic logs
+  const initial = [
+    'Transaction: 3500 Robux — purchase confirmed',
+    'User joined team Builders',
+    'Experience "Tycoon Deluxe" created',
+    'Revenue generated: 5,200 Robux',
+    'Report closed: Harassment #124',
+    'Developer options toggled: Beta Mode',
+    'Inventory updated: Special Hat added',
+    'Permissions updated: Role Builder',
+    'Audit completed: No anomalies',
+    'Promo campaign sent to VIP'
+  ];
+  initial.forEach((l,i)=> setTimeout(()=> addLog(l), 150 + i*80));
+
+  /* Email modal */
+  const openEmail = document.getElementById('openEmail');
+  const emailModal = document.getElementById('emailModal');
+  const cancelEmail = document.getElementById('cancelEmail');
+  const confirmEmail = document.getElementById('confirmEmail');
+  openEmail.onclick = ()=>{
+    document.getElementById('modalOldEmail').innerText = document.getElementById('emailText').innerText;
+    document.getElementById('modalNewEmail').value = '';
+    emailModal.style.display = 'flex';
+  };
+  cancelEmail.onclick = ()=> emailModal.style.display = 'none';
+
+  confirmEmail.onclick = ()=>{
+    const val = (document.getElementById('modalNewEmail').value || '').trim();
+    if(!val){ alert('Enter a valid email'); return; }
+    emailModal.style.display = 'none';
+    showLoader(5000, ()=>{
+      document.getElementById('emailText').innerText = val;
+      addLog(`Email changed to ${val}`);
+      showConfirm('Email successfully updated ✔︎');
+    });
+  };
+
+  /* Send Reset Password */
+  document.getElementById('sendReset').onclick = ()=>{
+    showLoader(5000, ()=>{
+      addLog(`Password reset email sent to ${document.getElementById('emailText').innerText}`);
+      showConfirm('Password reset sent ✔︎');
+    });
+  };
+
+  /* Quick actions */
+  document.querySelectorAll('.action-btn').forEach(b=>{
+    b.onclick = (e)=>{
+      const a = e.currentTarget.dataset.action;
+      addLog(`Quick Action executed: ${a}`);
+      showConfirm(`${a} executed`);
+      if(a === 'Ban User') document.getElementById('banModal').style.display = 'flex';
+      if(a === 'Reset Password') {
+        showLoader(5000, ()=>{
+          addLog(`Password reset sent to ${document.getElementById('emailText').innerText}`);
+          showConfirm('Password reset sent ✔︎');
+        });
+      }
+      if(a === 'View Experiences'){
+        const el = document.getElementById('expList');
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    };
+  });
+
+  /* History button */
+  document.getElementById('historyBtn').onclick = ()=>{
+    const mb = document.createElement('div'); mb.className='modal-backdrop'; mb.style.display='flex';
+    mb.innerHTML = `<div class="modal-card">
+      <h3>Login History & IPs</h3>
+      <div class="row"><span class="small">Recent:</span><div style="display:flex;flex-direction:column;gap:6px">
+        <div class="muted">10 Oct 2025 — 14:32 — 192.168.1.45</div>
+        <div class="muted">02 Sep 2025 — 09:12 — 172.16.0.3</div>
+        <div class="muted">15 Jan 2025 — 21:02 — 203.0.113.12</div>
+      </div></div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
+        <button class="btn btn-ghost closeHist">Close</button>
+      </div>
+    </div>`;
+    document.body.appendChild(mb);
+    mb.querySelector('.closeHist').onclick = ()=> mb.remove();
+  };
+
+  /* Warnings & Ban flows */
+  document.getElementById('cancelWarn').onclick = ()=> document.getElementById('warningsModal').style.display='none';
+  document.getElementById('confirmWarn').onclick = ()=>{
+    const reason = (document.getElementById('modalWarnReason').value||'').trim() || 'No reason';
+    document.getElementById('warningsModal').style.display='none';
+    showLoader(5000, ()=>{
+      addLog(`Warning added: "${reason}"`);
+      showConfirm('Warning added ✔︎');
+      const el = document.getElementById('curWarnings');
+      el.innerText = (parseInt(el.innerText||'0') + 1);
+      document.getElementById('modalWarnReason').value = '';
+    });
+  };
+
+  document.getElementById('cancelBan').onclick = ()=> document.getElementById('banModal').style.display='none';
+  document.getElementById('confirmBan').onclick = ()=>{
+    const status = document.getElementById('banStatus').value;
+    const dur = (document.getElementById('banDuration').value||'').trim() || 'N/A';
+    document.getElementById('banModal').style.display='none';
+    showLoader(5000, ()=>{
+      document.getElementById('statusText').innerText = status;
+      addLog(`Account status changed to ${status} (${dur})`);
+      showConfirm(`Status: ${status}`);
+      document.getElementById('banDuration').value = '';
+    });
+  };
+
+  // close modal on backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(md=>{
+    md.addEventListener('click', (e)=> { if(e.target === md) md.style.display='none'; });
+  });
+
+  // Ensure loader hidden on load
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('confirmPopup').style.display = 'none';
+
+  /* Clear & Backup logs buttons */
+  document.getElementById('clearLogs').onclick = ()=>{
+    const logsPanel = document.getElementById('logsPanel');
+    // remove all log entries after header
+    const children = Array.from(logsPanel.children).filter((c, i)=> i>0);
+    children.forEach(c => c.remove());
+    addLog('Logs cleared by admin', 'warning');
+    showConfirm('Logs cleared');
+  };
+  document.getElementById('backupLogs').onclick = ()=>{
+    // simulate backup action and add a log entry
+    addLog('Logs backed up (simulated)');
+    showConfirm('Logs backed up');
+  };
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
