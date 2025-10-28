@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okta Dash</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #24AE8F;
+            --primary-dark: #1c8a72;
+            --primary-light: rgba(36, 174, 143, 0.1);
+            --secondary: #00142A;
+            --accent: #FFFFFF;
+            --dark: #0b0a0b;
+            --dark-light: #1a191a;
+            --dark-lighter: #2a282a;
+            --text: #FFFFFF;
+            --text-secondary: #a0a0a0;
+            --success: #24AE8F;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --border: #3a383a;
+            --separator: #4a484a;
+            --okta-purple: #3f2b56;
+            --okta-blue: #007dc1;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            --separator-gradient: linear-gradient(90deg, transparent, var(--separator), transparent);
+            --gold: #FFD700;
+            --silver: #C0C0C0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(36, 174, 143, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(36, 174, 143, 0.5);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--dark-light);
+            padding: 20px 0;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            border-right: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--separator-gradient);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(36, 174, 143, 0.3);
+        }
+
+        .menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item:hover {
+            background-color: var(--dark-lighter);
+        }
+
+        .menu-item.active {
+            background-color: var(--dark-lighter);
+            border-left-color: var(--primary);
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 20px;
+            background: var(--dark);
+            min-height: 100vh;
+            width: calc(100% - 260px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            background-color: var(--dark-light);
+            border-radius: 10px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 8px 15px;
+            width: 350px;
+            border: 1px solid var(--border);
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            width: 100%;
+            margin-left: 10px;
+            outline: none;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            background-color: var(--dark-lighter);
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            gap: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .security-info {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-left: 10px;
+            padding-left: 10px;
+            border-left: 1px solid var(--separator);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+        }
+
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--separator-gradient);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        /* Tables */
+        .table-container {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .table-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            background-color: rgba(36, 174, 143, 0.05);
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: rgba(36, 174, 143, 0.2);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--warning);
+        }
+
+        .status-suspended {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+        }
+
+        .status-verified {
+            background-color: rgba(36, 174, 143, 0.2);
+            color: var(--success);
+        }
+
+        .status-unverified {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--warning);
+        }
+
+        .status-rejected {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            background: linear-gradient(135deg, var(--warning) 0%, #e67e22 100%);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(243, 156, 18, 0.3);
+        }
+
+        .alert-banner i {
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        /* Control Panels */
+        .control-panel {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .control-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .control-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .control-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .control-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .control-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--dark-lighter);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 220px;
+            }
+            .main-content {
+                margin-left: 220px;
+                width: calc(100% - 220px);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .search-bar {
+                width: 100%;
+            }
+            .user-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-light);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* KYC Verification Section */
+        .kyc-section {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .kyc-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .kyc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .kyc-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .kyc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .kyc-title {
+            font-weight: 600;
+        }
+
+        .kyc-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Transaction Monitoring */
+        .transaction-monitoring {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .transaction-monitoring::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .transaction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .transaction-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .transaction-title {
+            font-weight: 600;
+        }
+
+        .transaction-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* AML Monitoring */
+        .aml-monitoring {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .aml-monitoring::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .aml-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .aml-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .aml-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .aml-title {
+            font-weight: 600;
+        }
+
+        .aml-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Support Tickets */
+        .support-tickets {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .support-tickets::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .ticket-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .ticket-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ticket-title {
+            font-weight: 600;
+        }
+
+        .ticket-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* System Controls */
+        .system-controls {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .system-controls::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .system-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .system-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .system-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .system-title {
+            font-weight: 600;
+        }
+
+        .system-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Okta Integration */
+        .okta-panel {
+            background-color: var(--dark-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .okta-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, var(--okta-purple) 0%, var(--okta-blue) 100%);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .okta-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .okta-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--okta-purple) 0%, var(--okta-blue) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .okta-logo i {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .okta-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .okta-status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .okta-status-indicator.offline {
+            background-color: var(--danger);
+        }
+
+        .okta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .okta-item {
+            background-color: var(--dark-lighter);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border);
+        }
+
+        .okta-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .okta-item-title {
+            font-weight: 600;
+        }
+
+        .okta-item-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Premium Enhancements */
+        .section-divider {
+            height: 1px;
+            background: var(--separator-gradient);
+            margin: 25px 0;
+            width: 100%;
+        }
+
+
+
+        .card-premium {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-premium::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 40px 40px 0;
+            border-color: transparent var(--gold) transparent transparent;
+        }
+
+        .card-premium .premium-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: var(--dark);
+            z-index: 1;
+            font-size: 0.8rem;
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 15px rgba(36, 174, 143, 0.3);
+        }
+
+        .premium-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .premium-title {
+            display: flex;
+            align-items: center;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Layout improvements */
+        .content-wrapper {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .centered-layout {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading dashboard...</p>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+              <img src="logo.png" alt="Logo" class="sidebar-logo">
+<style>
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px; /* increase to make it fill more of the sidebar */
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.logo::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px; /* align visually with menu items */
+  right: 20px;
+  height: 0px;
+  background: var(--separator-gradient);
+  opacity: 0.6;
+}
+
+.sidebar .sidebar-logo {
+  width: 400px; /* adjust size as needed */
+  height: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 4px rgba(36, 174, 143, 0.4));
+}
+
+</style>
+            </div>
+            <ul class="menu">
+                <li class="menu-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transaction Monitoring</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>KYC & Verification</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-search-dollar"></i>
+                    <span>AML Monitoring</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-headset"></i>
+                    <span>Support Tickets</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>System Controls</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics & Reports</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-gavel"></i>
+                    <span>Compliance</span>
+                </li>
+                <li class="menu-item">
+                    <i class="fas fa-wallet"></i>
+                    <span>Wallet Management</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-wrapper">
+                <div class="centered-layout">
+                    <div class="header">
+                        <div style="display: flex; align-items: center;">
+                            <button class="menu-toggle">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <div class="search-bar">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search users, transactions, tickets...">
+                            </div>
+                        </div>
+                        <div class="user-info">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Admin">
+                            <div class="user-details">
+                                <div class="user-name">Michael Chen</div>
+                                <div class="user-role">Senior Compliance Officer</div>
+                            </div>
+                            <div class="security-info">
+                                <div class="security-row">
+                                    <span>IP:</span>
+                                    <span>18.209.113.128</span>
+                                </div>
+                                <div class="security-row">
+                                    <span>Location:</span>
+                                    <span>Singapore, SG</span>
+                                </div>
+                            </div>
+                            <button class="logout-btn" title="Logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Alert Banner -->
+                    <div class="alert-banner">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>High Priority Alert</strong> - 3 suspicious transactions detected in the last hour requiring manual review.
+                        </div>
+                    </div>
+
+                    <!-- Okta Integration Panel -->
+                    <div class="okta-panel">
+                        <div class="okta-header">
+                            <div class="okta-logo">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h3>Okta Identity Management</h3>
+                                <div class="okta-status">
+                                    <div class="okta-status-indicator"></div>
+                                    <span>Connected to Okta Identity Cloud</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="okta-grid">
+                            <div class="okta-item">
+                                <div class="okta-item-header">
+                                    <div class="okta-item-title">SSO Status</div>
+                                    <span style="color: var(--success);">Active</span>
+                                </div>
+                                <div class="okta-item-details">
+                                    <p>Single Sign-On enabled for all users</p>
+                                    <p>Last sync: 5 minutes ago</p>
+                                </div>
+                            </div>
+                            <div class="okta-item">
+                                <div class="okta-item-header">
+                                    <div class="okta-item-title">MFA Enforcement</div>
+                                    <span style="color: var(--success);">Enabled</span>
+                                </div>
+                                <div class="okta-item-details">
+                                    <p>Multi-factor authentication required</p>
+                                    <p>98.7% compliance rate</p>
+                                </div>
+                            </div>
+                            <div class="okta-item">
+                                <div class="okta-item-header">
+                                    <div class="okta-item-title">User Provisioning</div>
+                                    <span style="color: var(--success);">Automatic</span>
+                                </div>
+                                <div class="okta-item-details">
+                                    <p>Automated user onboarding/offboarding</p>
+                                    <p>Last provision: 2 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="okta-item">
+                                <div class="okta-item-header">
+                                    <div class="okta-item-title">API Access</div>
+                                    <span style="color: var(--success);">Healthy</span>
+                                </div>
+                                <div class="okta-item-details">
+                                    <p>API integration operational</p>
+                                    <p>Response time: 142ms</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-actions" style="margin-top: 15px;">
+                            <button class="btn btn-outline">
+                                <i class="fas fa-sync-alt"></i> Sync Now
+                            </button>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-cog"></i> Okta Settings
+                            </button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-shield-alt"></i> Security Logs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-user-shield"></i> KYC Review
+                        </button>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-file-export"></i> Generate Reports
+                        </button>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-bell"></i> Alerts (12)
+                        </button>
+                        <button class="btn btn-warning">
+                            <i class="fas fa-exclamation-circle"></i> Flagged Users
+                        </button>
+                    </div>
+
+                    <!-- Dashboard Cards -->
+                    <div class="dashboard-cards">
+                        <div class="card card-premium">
+                            <i class="fas fa-crown premium-icon"></i>
+                            <div class="card-header">
+                                <div class="card-title">Total Users</div>
+                                <i class="fas fa-users" style="color: var(--primary);"></i>
+                            </div>
+                            <div class="card-value">1,847,392</div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+3.7% from last week</span>
+                            </div>
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <div class="stat-value">84%</div>
+                                    <div class="stat-label">Verified</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">12%</div>
+                                    <div class="stat-label">Pending</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">4%</div>
+                                    <div class="stat-label">Suspended</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card card-premium">
+                            <i class="fas fa-crown premium-icon"></i>
+                            <div class="card-header">
+                                <div class="card-title">24h Volume</div>
+                                <i class="fas fa-chart-bar" style="color: var(--primary);"></i>
+                            </div>
+                            <div class="card-value">$3.28B</div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+2.1% from yesterday</span>
+                            </div>
+                            <div class="stats-row">
+                                <div class="stat-item">
+                                    <div class="stat-value">$1.2B</div>
+                                    <div class="stat-label">BTC</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">$0.8B</div>
+                                    <div class="stat-label">ETH</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">$1.28B</div>
+                                    <div class="stat-label">Other</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Pending KYC</div>
+                                <i class="fas fa-user-check" style="color: var(--primary);"></i>
+                            </div>
+                            <div class="card-value">1,247</div>
+                            <div class="card-change negative">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+18% from yesterday</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Support Tickets</div>
+                                <i class="fas fa-ticket-alt" style="color: var(--primary);"></i>
+                            </div>
+                            <div class="card-value">342</div>
+                            <div class="card-change positive">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-12% from last week</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <!-- User Management -->
+                    <div class="table-container">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>User Management</h3>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline" style="margin-right: 10px;">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add User
+                                </button>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>KYC Status</th>
+                                    <th>Account Status</th>
+                                    <th>Balance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#KU84721</td>
+                                    <td>Sarah Johnson</td>
+                                    <td>sarahhjohnson2214@gmail.com</td>
+                                    <td><span class="status status-verified">Verified</span></td>
+                                    <td><span class="status status-active">Active</span></td>
+                                    <td>$42,580</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#KU72941</td>
+                                    <td>David Chen</td>
+                                    <td>davidchencontact@outlook.com</td>
+                                    <td><span class="status status-pending">Pending</span></td>
+                                    <td><span class="status status-active">Active</span></td>
+                                    <td>$18,245</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-sm">
+                                                <i class="fas fa-user-shield"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#KU63812</td>
+                                    <td>Maria Rodriguez</td>
+                                    <td>temptempmaria@yahoo.com</td>
+                                    <td><span class="status status-rejected">Rejected</span></td>
+                                    <td><span class="status status-suspended">Suspended</span></td>
+                                    <td>$0</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#KU52983</td>
+                                    <td>James Wilson</td>
+                                    <td>jameswilson@gmail.com</td>
+                                    <td><span class="status status-verified">Verified</span></td>
+                                    <td><span class="status status-active">Active</span></td>
+                                    <td>$127,430</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-sm">
+                                                <i class="fas fa-flag"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- KYC Verification -->
+                    <div class="kyc-section">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>KYC Verification Queue</h3>
+                            </div>
+                            <button class="btn btn-outline btn-sm">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                        <div class="kyc-grid">
+                            <div class="kyc-item glow-effect">
+                                <div class="kyc-header">
+                                    <div class="kyc-title">Malakay Noah</div>
+                                    <span class="status status-pending">Pending Review</span>
+                                </div>
+                                <div class="kyc-details">
+                                    <p>ID: #KU72941 | Email: malakayysure@outlook.com</p>
+                                    <p>Submitted: 2 hours ago | Country: Singapore</p>
+                                    <p>Documents: Passport, Selfie, Proof of Address</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-success btn-sm">Manual Approve</button>
+                                    <button class="btn btn-danger btn-sm">Reject</button>
+                                    <button class="btn btn-outline btn-sm">Request More</button>
+                                </div>
+                            </div>
+                            <div class="kyc-item">
+                                <div class="kyc-header">
+                                    <div class="kyc-title">Lisa Wang</div>
+                                    <span class="status status-pending">Documents Required</span>
+                                </div>
+                                <div class="kyc-details">
+                                    <p>ID: #KU42871 | Email: lisanoonebetter@gmail.com</p>
+                                    <p>Submitted: 5 hours ago | Country: Malaysia</p>
+                                    <p>Documents: Passport (Additional Proof of Address Required)</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-success btn-sm">Approve</button>
+                                    <button class="btn btn-danger btn-sm">Reject</button>
+                                    <button class="btn btn-outline btn-sm">Request More</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Controls -->
+                    <div class="control-panel">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>Account Security Controls</h3>
+                            </div>
+                            <button class="btn btn-outline btn-sm">
+                                <i class="fas fa-shield-alt"></i> Security Logs
+                            </button>
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-item">
+                                <span class="control-label">Password Reset Requests</span>
+                                <p style="font-size: 0.9rem; margin-bottom: 10px;">Pending: 12 | Today: 47</p>
+                                <div class="control-actions">
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-key"></i> Manage
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-label">2FA Resets</span>
+                                <p style="font-size: 0.9rem; margin-bottom: 10px;">Pending: 8 | Today: 23</p>
+                                <div class="control-actions">
+                                    <button class="btn btn-warning btn-sm">
+                                        <i class="fas fa-sync-alt"></i> Reset
+                                    </button>
+                                    <button class="btn btn-outline btn-sm">
+                                        <i class="fas fa-list"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-label">Suspicious Logins</span>
+                                <p style="font-size: 0.9rem; margin-bottom: 10px;">Flagged: 15 | Blocked: 7</p>
+                                <div class="control-actions">
+                                    <button class="btn btn-danger btn-sm">
+                                        <i class="fas fa-ban"></i> Block
+                                    </button>
+                                    <button class="btn btn-outline btn-sm">
+                                        <i class="fas fa-eye"></i> Review
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-label">Device Management</span>
+                                <p style="font-size: 0.9rem; margin-bottom: 10px;">Trusted Devices: 24,583</p>
+                                <div class="control-actions">
+                                    <button class="btn btn-outline btn-sm">
+                                        <i class="fas fa-desktop"></i> Manage
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Monitoring -->
+                    <div class="transaction-monitoring">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>Transaction Monitoring</h3>
+                            </div>
+                            <button class="btn btn-outline btn-sm">
+                                <i class="fas fa-redo"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="transaction-grid">
+                            <div class="transaction-item glow-effect">
+                                <div class="transaction-header">
+                                    <div class="transaction-title">Large Withdrawals</div>
+                                    <span style="color: var(--warning);">12 Pending</span>
+                                </div>
+                                <div class="transaction-details">
+                                    <p>Amounts exceeding $50,000 require manual approval</p>
+                                    <p>Last 24h: $4.2M across 47 transactions</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-primary btn-sm">Review</button>
+                                </div>
+                            </div>
+                            <div class="transaction-item">
+                                <div class="transaction-header">
+                                    <div class="transaction-title">Suspicious Patterns</div>
+                                    <span style="color: var(--danger);">8 De tected</span>
+                                </div>
+                                <div class="transaction-details">
+                                    <p>Unusual trading patterns detected</p>
+                                    <p>3 accounts flagged for potential market manipulation</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-warning btn-sm">Investigate</button>
+                                </div>
+                            </div>
+                            <div class="transaction-item">
+                                <div class="transaction-header">
+                                    <div class="transaction-title">Deposit Issues</div>
+                                    <span style="color: var(--warning);">5 Reported</span>
+                                </div>
+                                <div class="transaction-details">
+                                    <p>Failed or stuck deposits</p>
+                                    <p>Requires manual blockchain verification</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-outline btn-sm">Resolve</button>
+                                </div>
+                            </div>
+                            <div class="transaction-item">
+                                <div class="transaction-header">
+                                    <div class="transaction-title">AML Flags</div>
+                                    <span style="color: var(--danger);">3 High Risk</span>
+                                </div>
+                                <div class="transaction-details">
+                                    <p>Transactions matching known patterns</p>
+                                    <p>Requires immediate compliance review</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-danger btn-sm">Review</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AML Monitoring -->
+                    <div class="aml-monitoring">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>AML & Compliance Monitoring</h3>
+                            </div>
+                            <button class="btn btn-outline btn-sm">
+                                <i class="fas fa-file-export"></i> Report
+                            </button>
+                        </div>
+                        <div class="aml-grid">
+                            <div class="aml-item">
+                                <div class="aml-header">
+                                    <div class="aml-title">Sanctions Screening</div>
+                                    <span style="color: var(--success);">Clean</span>
+                                </div>
+                                <div class="aml-details">
+                                    <p>Last scan: 15 minutes ago</p>
+                                    <p>0 matches in OFAC, UN, EU sanctions lists</p>
+                                </div>
+                            </div>
+                            <div class="aml-item glow-effect">
+                                <div class="aml-header">
+                                    <div class="aml-title">PEP Detection</div>
+                                    <span style="color: var(--warning);">2 Matches</span>
+                                </div>
+                                <div class="aml-details">
+                                    <p>Politically Exposed Persons detected</p>
+                                    <p>Requires enhanced due diligence</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-warning btn-sm">Review</button>
+                                </div>
+                            </div>
+                            <div class="aml-item">
+                                <div class="aml-header">
+                                    <div class="aml-title">Adverse Media</div>
+                                    <span style="color: var(--danger);">1 Alert</span>
+                                </div>
+                                <div class="aml-details">
+                                    <p>Negative news coverage detected</p>
+                                    <p>User linked to financial crime investigation</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-danger btn-sm">Investigate</button>
+                                </div>
+                            </div>
+                            <div class="aml-item">
+                                <div class="aml-header">
+                                    <div class="aml-title">Transaction Patterns</div>
+                                    <span style="color: var(--warning);">Monitoring</span>
+                                </div>
+                                <div class="aml-details">
+                                    <p>Structuring patterns detected</p>
+                                    <p>Multiple transactions below reporting thresholds</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-outline btn-sm">Analyze</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Support Tickets -->
+                    <div class="support-tickets">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>Support Ticket Management</h3>
+                            </div>
+                            <button class="btn btn-outline btn-sm">
+                                <i class="fas fa-list"></i> View All
+                            </button>
+                        </div>
+                        <div class="ticket-grid">
+                            <div class="ticket-item glow-effect">
+                                <div class="ticket-header">
+                                    <div class="ticket-title">Withdrawal Failed</div>
+                                    <span class="status status-pending">High Priority</span>
+                                </div>
+                                <div class="ticket-details">
+                                    <p>User: Robert Kim (robert.kim@gmail.com)</p>
+                                    <p>Issue: $15,000 BTC withdrawal stuck for 12 hours</p>
+                                    <p>Assigned to: Support Team A</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-primary btn-sm">Take Over</button>
+                                    <button class="btn btn-outline btn-sm">View</button>
+                                </div>
+                            </div>
+                            <div class="ticket-item">
+                                <div class="ticket-header">
+                                    <div class="ticket-title">2FA Recovery</div>
+                                    <span class="status status-pending">Medium Priority</span>
+                                </div>
+                                <div class="ticket-details">
+                                    <p>User: Amanda Lee (amanda.lee@yahoo.com)</p>
+                                    <p>Issue: Lost access to Google Authenticator</p>
+                                    <p>Assigned to: Support Team B</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-primary btn-sm">Take Over</button>
+                                    <button class="btn btn-outline btn-sm">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Controls -->
+                    <div class="system-controls">
+                        <div class="premium-header">
+                            <div class="premium-title">
+                                <h3>System & Market Controls</h3>
+                            </div>
+                            <button class="btn btn-outline btn-sm">
+                                <i class="fas fa-cog"></i> Settings
+                            </button>
+                        </div>
+                        <div class="system-grid">
+                            <div class="system-item">
+                                <div class="system-header">
+                                    <div class="system-title">Trading Status</div>
+                                    <span style="color: var(--success);">Active</span>
+                                </div>
+                                <div class="system-details">
+                                    <p>All markets operational</p>
+                                    <p>Last maintenance: 3 days ago</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-warning btn-sm">Pause</button>
+                                </div>
+                            </div>
+                            <div class="system-item">
+                                <div class="system-header">
+                                    <div class="system-title">Withdrawal Limits</div>
+                                    <span style="color: var(--success);">Normal</span>
+                                </div>
+                                <div class="system-details">
+                                    <p>Standard limits applied</p>
+                                    <p>$50,000 daily for verified users</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-outline btn-sm">Adjust</button>
+                                </div>
+                            </div>
+                            <div class="system-item">
+                                <div class="system-header">
+                                    <div class="system-title">API Status</div>
+                                    <span style="color: var(--success);">Stable</span>
+                                </div>
+                                <div class="system-details">
+                                    <p>Response time: 124ms</p>
+                                    <p>99.98% uptime this month</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-outline btn-sm">Monitor</button>
+                                </div>
+                            </div>
+                            <div class="system-item">
+                                <div class="system-header">
+                                    <div class="system-title">Security Level</div>
+                                    <span style="color: var(--success);">High</span>
+                                </div>
+                                <div class="system-details">
+                                    <p>All security systems active</p>
+                                    <p>No critical alerts</p>
+                                </div>
+                                <div class="control-actions">
+                                    <button class="btn btn-outline btn-sm">Review</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate loading screen
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.querySelector('.loading-screen').classList.add('hidden');
+            }, 1500);
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // Logout button functionality
+        document.querySelector('.logout-btn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                const loadingScreen = document.querySelector('.loading-screen');
+                loadingScreen.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    alert('You have been logged out successfully.');
+                    // In a real application, this would redirect to login page
+                }, 1000);
+            }
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+            });
+        });
+
+        // Menu item functionality
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all menu items
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                // Add active class to clicked item
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
